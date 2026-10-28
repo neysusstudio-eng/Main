@@ -1,12 +1,26 @@
-function execute(cmd) {
-    log('EXECUTING: ' + cmd + '_QUERY...');
-    
-    // Verifica se o aplicativo Android está conectado via WebView Bridge
-    if (window.AndroidBridge && typeof window.AndroidBridge.postMessage === 'function') {
-        // Envia o comando direto para o Java do seu app no Sketchware Pro!
-        window.AndroidBridge.postMessage(cmd);
-        log('DISPATCHED TO APP NATIVE BRIDGE.');
-    } else {
-        log('WARNING: RUNNING IN BROWSER MODE.');
+module.exports = (req, res) => {
+    // Configura os cabeçalhos para aceitar requisições do seu app Android
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'POST') {
+        const { cmd, session } = req.body;
+
+        // Aqui o servidor na nuvem processa o comando que o app enviou
+        console.log("Comando recebido do app:", cmd);
+
+        // Responde de volta para o aplicativo Android
+        return res.status(200).json({
+            status: "SUCCESS",
+            message: `Comando ${cmd} processado com sucesso na nuvem 24h.`,
+            timestamp: Date.now()
+        });
     }
-}
+
+    // Se acessar via GET direto no link, apenas confirma que o serviço está online
+    return res.status(200).json({
+        status: "DEMON_EYE BACKEND ONLINE",
+        uptime: "24/7"
+    });
+};
