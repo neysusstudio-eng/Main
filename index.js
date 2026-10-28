@@ -10,29 +10,33 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
-        try {
-            // Garante que o corpo é lido corretamente mesmo se vier como string ou JSON
-            let body = req.body;
-            if (typeof body === 'string') {
-                body = JSON.parse(body);
+        let rawData = '';
+        
+        req.on('data', chunk => {
+            rawData += chunk;
+        });
+
+        req.on('end', () => {
+            try {
+                const body = rawData ? JSON.parse(rawData) : {};
+                const { code, api_id, api_hash, target_chat } = body;
+
+                console.log(`Comando recebido com sucesso: ${code} para o chat ${target_chat}`);
+
+                res.status(200).json({
+                    success: true,
+                    message: `Comando ${code} executado com sucesso!`,
+                    target: target_chat
+                });
+            } catch (err) {
+                res.status(400).json({
+                    success: false,
+                    error: "Erro no formato JSON"
+                });
             }
-
-            const { code, api_id, api_hash, target_chat } = body || {};
-
-            console.log(`Comando executado: ${code} | Chat: ${target_chat}`);
-
-            return res.status(200).json({
-                success: true,
-                message: `Comando ${code} processado com sucesso pelo backend!`,
-                target: target_chat
-            });
-        } catch (err) {
-            return res.status(400).json({
-                success: false,
-                error: "Erro ao processar JSON: " + err.message
-            });
-        }
+        });
+        return;
     }
 
-    return res.status(200).send('DEMON_EYE.SYS Backend Online');
+    res.status(200).send('DEMON_EYE.SYS Backend Online');
 };
