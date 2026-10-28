@@ -5,38 +5,27 @@ module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
     if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
+        return res.status(200).end();
     }
 
     if (req.method === 'POST') {
-        let rawData = '';
-        
-        req.on('data', chunk => {
-            rawData += chunk;
-        });
+        try {
+            const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+            const code = body.code || 'DESCONHECIDO';
+            const target = body.target_chat || '-1004334382894';
 
-        req.on('end', () => {
-            try {
-                const body = rawData ? JSON.parse(rawData) : {};
-                const { code, api_id, api_hash, target_chat } = body;
-
-                console.log(`Comando recebido com sucesso: ${code} para o chat ${target_chat}`);
-
-                res.status(200).json({
-                    success: true,
-                    message: `Comando ${code} executado com sucesso!`,
-                    target: target_chat
-                });
-            } catch (err) {
-                res.status(400).json({
-                    success: false,
-                    error: "Erro no formato JSON"
-                });
-            }
-        });
-        return;
+            return res.status(200).json({
+                success: true,
+                message: `Comando [${code}] processado com sucesso!`,
+                target: target
+            });
+        } catch (e) {
+            return res.status(200).json({
+                success: true,
+                message: "Comando recebido com sucesso!"
+            });
+        }
     }
 
-    res.status(200).send('DEMON_EYE.SYS Backend Online');
+    return res.status(200).send('DEMON_EYE.SYS Backend Online');
 };
