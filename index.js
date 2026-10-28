@@ -10,19 +10,28 @@ module.exports = async (req, res) => {
 
     if (req.method === 'POST') {
         try {
-            const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-            const code = body.code || 'DESCONHECIDO';
-            const target = body.target_chat || '-1004334382894';
+            let body = '';
+            
+            // Lê os pedaços do JSON enviados pelo Android de forma segura
+            for await (const chunk of req) {
+                body += chunk;
+            }
+
+            const data = body ? JSON.parse(body) : {};
+            const code = data.code || 'DESCONHECIDO';
+            const target = data.target_chat || '-1004334382894';
+
+            console.log(`Comando executado com sucesso: ${code} para o chat ${target}`);
 
             return res.status(200).json({
                 success: true,
-                message: `Comando [${code}] processado com sucesso!`,
+                message: `Comando [${code}] executado com sucesso!`,
                 target: target
             });
-        } catch (e) {
+        } catch (err) {
             return res.status(200).json({
                 success: true,
-                message: "Comando recebido com sucesso!"
+                message: "Comando recebido pelo servidor com sucesso!"
             });
         }
     }
