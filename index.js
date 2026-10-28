@@ -1,6 +1,4 @@
-
 module.exports = async (req, res) => {
-    // Permite CORS para o app Android conseguir falar com o servidor
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -12,18 +10,28 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
-        const { code, api_id, api_hash, target_chat } = req.body || {};
+        try {
+            // Garante que o corpo é lido corretamente mesmo se vier como string ou JSON
+            let body = req.body;
+            if (typeof body === 'string') {
+                body = JSON.parse(body);
+            }
 
-        // Aqui o servidor recebe o comando que foi clicado no app Android
-        console.log(`Comando recebido: ${code} | Alvo: ${target_chat}`);
+            const { code, api_id, api_hash, target_chat } = body || {};
 
-        // Podes adicionar aqui a lógica para processar o comando utilizando o api_id e api_hash
+            console.log(`Comando executado: ${code} | Chat: ${target_chat}`);
 
-        return res.status(200).json({
-            success: true,
-            message: `Comando ${code} executado com sucesso no backend!`,
-            target: target_chat
-        });
+            return res.status(200).json({
+                success: true,
+                message: `Comando ${code} processado com sucesso pelo backend!`,
+                target: target_chat
+            });
+        } catch (err) {
+            return res.status(400).json({
+                success: false,
+                error: "Erro ao processar JSON: " + err.message
+            });
+        }
     }
 
     return res.status(200).send('DEMON_EYE.SYS Backend Online');
